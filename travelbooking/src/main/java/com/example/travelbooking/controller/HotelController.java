@@ -2,6 +2,7 @@ package com.example.travelbooking.controller;
 
 import com.example.travelbooking.dto.*;
 import com.example.travelbooking.service.TravelBookingService;
+import com.example.travelbooking.entity.Hotel;
 
 import jakarta.validation.Valid;
 
@@ -22,6 +23,7 @@ public class HotelController {
         this.service = service;
     }
 
+    // Add a new hotel
     @PostMapping
     public ResponseEntity<HotelResponse> addHotel(
             @Valid @RequestBody
@@ -33,6 +35,36 @@ public class HotelController {
                 .body(service.addHotel(request));
     }
 
+    @GetMapping
+    public List<Hotel> getAllHotels() {
+        return service.getAllHotels();
+    }
+
+    // Update an existing hotel
+    @PutMapping("/{hotelId}")
+    public HotelResponse updateHotel(
+
+            @PathVariable
+            Long hotelId,
+
+            @Valid
+            @RequestBody
+            UpdateHotelRequest request
+    ) {
+
+        return service.updateHotel(hotelId, request);
+    }
+
+    // Delete a hotel
+    @DeleteMapping("/{hotelId}")
+    public ResponseEntity<Void> deleteHotel(@PathVariable Long hotelId) {
+
+        service.deleteHotel(hotelId);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    // Add a new room to a hotel
     @PostMapping("/{hotelId}/rooms")
     public ResponseEntity<RoomResponse> addRoom(
 
@@ -48,6 +80,41 @@ public class HotelController {
                 .body(service.addRoom(hotelId, request));
     }
 
+    // Update an existing room in a hotel
+    @PutMapping("/{hotelId}/rooms/{roomId}")
+    public RoomResponse updateRoom(
+
+            @PathVariable
+            Long hotelId,
+
+            @PathVariable
+            Long roomId,
+
+            @Valid
+            @RequestBody
+            UpdateRoomRequest request
+    ) {
+
+        return service.updateRoom(hotelId, roomId, request);
+    }
+
+    // Delete a room from a hotel
+    @DeleteMapping("/{hotelId}/rooms/{roomId}")
+    public ResponseEntity<Void> deleteRoom(
+
+            @PathVariable
+            Long hotelId,
+
+            @PathVariable
+            Long roomId
+    ) {
+
+        service.deleteRoom(hotelId, roomId);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    // Fetch available rooms for a hotel within a specified date range
     @GetMapping("/{hotelId}/rooms/available")
     public List<RoomResponse> availableRooms(
 

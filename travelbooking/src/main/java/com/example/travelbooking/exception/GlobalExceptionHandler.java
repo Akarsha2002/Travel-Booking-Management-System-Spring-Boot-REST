@@ -20,12 +20,9 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(
-            ResourceNotFoundException.class
-    )
+    @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse>
     handleNotFound(
-
             ResourceNotFoundException exception,
             HttpServletRequest request
     ) {
@@ -38,12 +35,9 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler(
-            BookingConflictException.class
-    )
+    @ExceptionHandler(BookingConflictException.class)
     public ResponseEntity<ErrorResponse>
     handleConflict(
-
             BookingConflictException exception,
             HttpServletRequest request
     ) {
@@ -56,12 +50,9 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler(
-            BadRequestException.class
-    )
+    @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ErrorResponse>
     handleBadRequest(
-
             BadRequestException exception,
             HttpServletRequest request
     ) {
@@ -74,12 +65,9 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler(
-            MethodArgumentNotValidException.class
-    )
+    @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse>
     handleValidation(
-
             MethodArgumentNotValidException exception,
             HttpServletRequest request
     ) {

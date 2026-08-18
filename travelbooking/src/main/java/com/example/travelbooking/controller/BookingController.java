@@ -22,6 +22,7 @@ public class BookingController {
         this.service = service;
     }
 
+    // Book a room
     @PostMapping
     public ResponseEntity<BookingResponse> bookRoom(
 
@@ -32,11 +33,25 @@ public class BookingController {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(
-                        service.bookRoom(request)
-                );
+                .body(service.bookRoom(request));
     }
 
+    // Update an existing booking
+    @PutMapping("/{bookingId}")
+    public BookingResponse updateBooking(
+
+            @PathVariable
+            Long bookingId,
+
+            @Valid
+            @RequestBody
+            UpdateBookingRequest request
+    ) {
+
+        return service.updateBooking(bookingId, request);
+    }
+
+    // Cancel a booking
     @PatchMapping("/{bookingId}/cancel")
     public BookingResponse cancelBooking(
 
@@ -49,9 +64,22 @@ public class BookingController {
         );
     }
 
+    // Delete a booking
+    @DeleteMapping("/{bookingId}")
+    public ResponseEntity<Void> deleteBooking(
+
+            @PathVariable
+            Long bookingId
+    ) {
+
+        service.deleteBooking(bookingId);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    // Fetch all bookings
     @GetMapping
-    public List<BookingResponse>
-    getAllBookings() {
+    public List<BookingResponse> getAllBookings() {
 
         return service.getAllBookings();
     }

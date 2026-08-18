@@ -44,6 +44,67 @@ public class TravelBookingService {
         );
     }
 
+    public List<Hotel> getAllHotels() {
+        return hotelRepository.findAll();
+    }
+
+    public HotelResponse updateHotel(
+        Long hotelId,
+        UpdateHotelRequest request
+) {
+
+    Hotel hotel = hotelRepository
+            .findById(hotelId)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException(
+                            "Hotel not found with ID: "
+                                    + hotelId
+                    )
+            );
+
+    hotel.setName(
+            request.name().trim()
+    );
+
+    hotel.setCity(
+            request.city().trim()
+    );
+
+    hotel = hotelRepository.save(hotel);
+
+    return new HotelResponse(
+            hotel.getId(),
+            hotel.getName(),
+            hotel.getCity()
+    );
+}
+
+public void deleteHotel(Long hotelId) {
+
+    Hotel hotel = hotelRepository
+            .findById(hotelId)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException(
+                            "Hotel not found with ID: "
+                                    + hotelId
+                    )
+            );
+
+    boolean hasRooms =
+            roomRepository.existsByHotel_Id(
+                    hotelId
+            );
+
+    if (hasRooms) {
+        throw new BadRequestException(
+                "Hotel cannot be deleted because rooms exist. "
+                        + "Delete the rooms first."
+        );
+    }
+
+    hotelRepository.delete(hotel);
+}
+
     public RoomResponse addRoom(Long hotelId, AddRoomRequest request
 ) {
 
@@ -66,6 +127,106 @@ public class TravelBookingService {
 
         return toRoomResponse(room);
     }
+
+    public RoomResponse updateRoom(
+        Long hotelId,
+        Long roomId,
+        UpdateRoomRequest request
+) {
+
+    Hotel hotel = hotelRepository
+            .findById(hotelId)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException(
+                            "Hotel not found with ID: "
+                                    + hotelId
+                    )
+            );
+
+    Room room = roomRepository
+            .findById(roomId)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException(
+                            "Room not found with ID: "
+                                    + roomId
+                    )
+            );
+
+    if (!room.getHotel()
+            .getId()
+            .equals(hotelId)) {
+
+        throw new BadRequestException(
+                "Room does not belong to this hotel"
+        );
+    }
+
+    boolean duplicate =
+            roomRepository
+                    .existsByHotel_IdAndRoomNumberIgnoreCaseAndIdNot(
+                            hotelId,
+                            request.roomNumber().trim(),
+                            roomId
+                    );
+
+    if (duplicate) {
+        throw new BadRequestException(
+                "Room number already exists in this hotel"
+        );
+    }
+
+    room.setRoomNumber(
+            request.roomNumber().trim()
+    );
+
+    room.setRoomType(
+            request.roomType()
+    );
+
+    room.setPricePerNight(
+            request.pricePerNight()
+    );
+
+    room.setHotel(hotel);
+
+    room = roomRepository.save(room);
+
+    return toRoomResponse(room);
+}
+
+public void deleteRoom(Long hotelId, Long roomId) {
+
+    Room room = roomRepository
+            .findById(roomId)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException(
+                            "Room not found with ID: "
+                                    + roomId
+                    )
+            );
+
+    if (!room.getHotel()
+            .getId()
+            .equals(hotelId)) {
+
+        throw new BadRequestException(
+                "Room does not belong to this hotel"
+        );
+    }
+
+    boolean hasBookings =
+            bookingRepository.existsByRoom_Id(
+                    roomId
+            );
+
+    if (hasBookings) {
+        throw new BadRequestException(
+                "Room cannot be deleted because bookings exist"
+        );
+    }
+
+    roomRepository.delete(room);
+}
 
     public List<RoomResponse> getAvailableRooms(Long hotelId, LocalDate checkIn, LocalDate checkOut) {
 
@@ -173,6 +334,105 @@ public class TravelBookingService {
 
         return toBookingResponse(bookingRepository.save(booking));
     }
+
+    public BookingResponse updateBooking(
+        Long bookingId,
+        UpdateBookingRequest request
+) {
+
+    Booking booking =
+            bookingRepository
+                    .findById(bookingId)
+                    .orElseThrow(() ->
+                            new ResourceNotFoundException(
+                                    "Booking not found with ID: "
+                                            + bookingId
+                            )
+                    );
+
+    validateDates(
+            request.checkInDate(),
+            request.checkOutDate()
+    );
+
+    Room room =
+            roomRepository
+                    .findById(request.roomId())
+                    .orElseThrow(() ->
+                            new ResourceNotFoundException(
+                                    "Room not found with ID: "
+                                            + request.roomId()
+                            )
+                    );
+
+    if (booking.getStatus()
+            == BookingStatus.CONFIRMED) {
+
+        long overlap =
+                bookingRepository
+                        .countOverlappingBookingsExcludingBooking(
+                                room.getId(),
+                                bookingId,
+                                BookingStatus.CONFIRMED,
+                                request.checkInDate(),
+                                request.checkOutDate()
+                        );
+
+        if (overlap > 0) {
+            throw new BookingConflictException(
+                    "Room is already booked for the selected dates"
+            );
+        }
+    }
+
+    long numberOfNights =
+            ChronoUnit.DAYS.between(
+                    request.checkInDate(),
+                    request.checkOutDate()
+            );
+
+    BigDecimal totalAmount =
+            room.getPricePerNight()
+                    .multiply(
+                            BigDecimal.valueOf(
+                                    numberOfNights
+                            )
+                    );
+
+    booking.setRoom(room);
+
+    booking.setCheckInDate(
+            request.checkInDate()
+    );
+
+    booking.setCheckOutDate(
+            request.checkOutDate()
+    );
+
+    booking.setTotalAmount(
+            totalAmount
+    );
+
+    booking =
+            bookingRepository.save(booking);
+
+    return toBookingResponse(booking);
+}
+
+public void deleteBooking(Long bookingId) {
+
+    Booking booking =
+            bookingRepository
+                    .findById(bookingId)
+                    .orElseThrow(() ->
+                            new ResourceNotFoundException(
+                                    "Booking not found with ID: "
+                                            + bookingId
+                            )
+                    );
+
+    bookingRepository.delete(booking);
+}
 
     public List<BookingResponse> getAllBookings() {
 
