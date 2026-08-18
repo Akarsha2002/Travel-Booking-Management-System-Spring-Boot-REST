@@ -44,8 +44,10 @@ public class TravelBookingService {
         );
     }
 
-    public List<Hotel> getAllHotels() {
-        return hotelRepository.findAll();
+    public List<HotelResponse> getAllHotels() {
+        return hotelRepository.findAll().stream()
+                .map(this::toHotelResponse)
+                .toList();
     }
 
     public HotelResponse updateHotel(
@@ -450,6 +452,15 @@ public void deleteBooking(Long bookingId) {
                     "Check-out date must be after check-in date"
             );
         }
+    }
+
+    private HotelResponse toHotelResponse(Hotel hotel) {
+
+        return new HotelResponse(
+                hotel.getId(),
+                hotel.getName(),
+                hotel.getCity()
+        );
     }
 
     private RoomResponse toRoomResponse(Room room) {

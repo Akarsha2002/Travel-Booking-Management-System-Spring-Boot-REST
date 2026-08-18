@@ -2,7 +2,6 @@ package com.example.travelbooking.controller;
 
 import com.example.travelbooking.dto.*;
 import com.example.travelbooking.service.TravelBookingService;
-import com.example.travelbooking.entity.Hotel;
 
 import jakarta.validation.Valid;
 
@@ -36,7 +35,7 @@ public class HotelController {
     }
 
     @GetMapping
-    public List<Hotel> getAllHotels() {
+    public List<HotelResponse> getAllHotels() {
         return service.getAllHotels();
     }
 
