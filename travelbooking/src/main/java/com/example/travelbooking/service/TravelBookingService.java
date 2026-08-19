@@ -50,6 +50,18 @@ public class TravelBookingService {
                 .toList();
     }
 
+    public HotelResponse getHotelById(Long hotelId) {
+        Hotel hotel = hotelRepository
+                .findById(hotelId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Hotel not found with ID: " + hotelId
+                        )
+                );
+                
+        return toHotelResponse(hotel);
+    }
+
     public HotelResponse updateHotel(
         Long hotelId,
         UpdateHotelRequest request

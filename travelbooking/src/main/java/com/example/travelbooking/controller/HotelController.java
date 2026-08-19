@@ -22,8 +22,8 @@ public class HotelController {
         this.service = service;
     }
 
-    // Add a new hotel
     @PostMapping
+    // Add a new hotel
     public ResponseEntity<HotelResponse> addHotel(
             @Valid @RequestBody
             AddHotelRequest request
@@ -35,8 +35,15 @@ public class HotelController {
     }
 
     @GetMapping
+    // Fetch all hotels
     public List<HotelResponse> getAllHotels() {
         return service.getAllHotels();
+    }
+
+    @GetMapping("/{hotelId}")
+    // Fetch a specific hotel by ID
+    public HotelResponse getHotelById(@PathVariable Long hotelId) {
+        return service.getHotelById(hotelId);
     }
 
     // Update an existing hotel
@@ -54,7 +61,7 @@ public class HotelController {
         return service.updateHotel(hotelId, request);
     }
 
-    // Delete a hotel
+    // Delete an existing hotel
     @DeleteMapping("/{hotelId}")
     public ResponseEntity<Void> deleteHotel(@PathVariable Long hotelId) {
 
@@ -63,8 +70,8 @@ public class HotelController {
         return ResponseEntity.noContent().build();
     }
 
-    // Add a new room to a hotel
     @PostMapping("/{hotelId}/rooms")
+    // Add Room to a Hotel
     public ResponseEntity<RoomResponse> addRoom(
 
             @PathVariable Long hotelId,
@@ -79,8 +86,8 @@ public class HotelController {
                 .body(service.addRoom(hotelId, request));
     }
 
-    // Update an existing room in a hotel
     @PutMapping("/{hotelId}/rooms/{roomId}")
+    // Update an existing room in a hotel
     public RoomResponse updateRoom(
 
             @PathVariable

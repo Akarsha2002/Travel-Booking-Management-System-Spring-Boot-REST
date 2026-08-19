@@ -7,24 +7,24 @@ import java.time.LocalDate;
 
 public record BookRoomRequest(
 
-        @NotNull
+        @NotNull(message = "Room ID is required")
         Long roomId,
 
-        @NotBlank
+        @NotBlank(message = "Customer name is required")
         String customerName,
 
-        @NotBlank
-        @Email
+        @NotBlank(message = "Customer email is required")
+        @Email(message = "Customer email must be valid")
         String customerEmail,
 
-        @NotBlank
+        @NotBlank(message = "Customer phone is required")
         String customerPhone,
 
-        @NotNull
+        @NotNull(message = "Check-in date is required")
         @JsonFormat(pattern = "dd-MM-yyyy")
         LocalDate checkInDate,
 
-        @NotNull
+        @NotNull(message = "Check-out date is required")
         @JsonFormat(pattern = "dd-MM-yyyy")
         LocalDate checkOutDate
 

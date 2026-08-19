@@ -4,21 +4,30 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "rooms")
+@Table(
+    name = "rooms",
+    uniqueConstraints =
+        @UniqueConstraint(
+                columnNames = {
+                        "hotel_id",
+                        "room_number"
+                }
+        )
+)
 public class Room {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name="room_number", nullable = false)
     private String roomNumber;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name="room_type", nullable = false)
     private RoomType roomType;
 
-    @Column(nullable = false)
+    @Column(name="price_per_night", nullable = false)
     private BigDecimal pricePerNight;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

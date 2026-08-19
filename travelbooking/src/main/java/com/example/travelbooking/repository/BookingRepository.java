@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
@@ -23,6 +24,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             @Param("checkOut") LocalDate checkOut
     );
 
+    
      @Query("""
             select count(b)
             from Booking b
@@ -51,4 +53,5 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     );
 
     boolean existsByRoom_Id(Long roomId);
+
 }
