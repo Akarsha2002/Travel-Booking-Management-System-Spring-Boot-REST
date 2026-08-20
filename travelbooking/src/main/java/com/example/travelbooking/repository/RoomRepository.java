@@ -16,4 +16,10 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
             String roomNumber,
             Long roomId
     );
+
+    boolean existsByHotel_IdAndRoomNumberIgnoreCase(
+            Long hotelId,
+            String roomNumber
+    );
+    
 }

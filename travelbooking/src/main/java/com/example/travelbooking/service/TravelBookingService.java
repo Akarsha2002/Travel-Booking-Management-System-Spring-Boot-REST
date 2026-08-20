@@ -36,7 +36,7 @@ public class TravelBookingService {
 
     public HotelResponse addHotel(AddHotelRequest request) {
 
-        Hotel hotel = new Hotel(request.name(), request.city());
+        Hotel hotel = new Hotel(request.name().trim(), request.city().trim());
         hotel = hotelRepository.save(hotel);
 
         return new HotelResponse(
@@ -121,12 +121,24 @@ public void deleteHotel(Long hotelId) {
                 .findById(hotelId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "Hotel not found"
+                                "Hotel not found with ID "+ hotelId
                         )
                 );
 
+        String roomNumber = request.getRoomNumber().trim();
+
+        if (roomRepository.existsByHotel_IdAndRoomNumberIgnoreCase(
+            hotelId,
+            roomNumber
+        )) {
+        throw new BookingConflictException(
+                "Room number " + roomNumber +
+                " already exists in hotel ID: " + hotelId
+        );
+    }
+
         Room room = new Room(
-                request.roomNumber(),
+                roomNumber,
                 request.roomType(),
                 request.pricePerNight(),
                 hotel
@@ -209,6 +221,8 @@ public void deleteHotel(Long hotelId) {
                     )
             );
 
+    String roomNumber = request.roomNumber().trim();
+
     Room room = roomRepository
             .findById(roomId)
             .orElseThrow(() ->
@@ -218,9 +232,7 @@ public void deleteHotel(Long hotelId) {
                     )
             );
 
-    if (!room.getHotel()
-            .getId()
-            .equals(hotelId)) {
+    if (!room.getHotel().getId().equals(hotelId)) {
 
         throw new BadRequestException(
                 "Room does not belong to this hotel"
@@ -231,7 +243,7 @@ public void deleteHotel(Long hotelId) {
             roomRepository
                     .existsByHotel_IdAndRoomNumberIgnoreCaseAndIdNot(
                             hotelId,
-                            request.roomNumber().trim(),
+                            roomNumber,
                             roomId
                     );
 
@@ -241,7 +253,7 @@ public void deleteHotel(Long hotelId) {
         );
     }
 
-    room.setRoomNumber( request.roomNumber().trim());
+    room.setRoomNumber( roomNumber );
     room.setRoomType(request.roomType());
     room.setPricePerNight(request.pricePerNight());
 
@@ -288,6 +300,13 @@ public void deleteRoom(Long hotelId, Long roomId) {
 
 @Transactional(readOnly = true)
 public List<RoomResponse> getAvailableRooms(Long hotelId, LocalDate checkIn, LocalDate checkOut) {
+
+        hotelRepository.findById(hotelId)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException(
+                            "Hotel not found with ID: " + hotelId
+                    )
+            );
 
         validateDates(checkIn, checkOut);
 
@@ -397,7 +416,7 @@ public BookingResponse bookRoom(BookRoomRequest request) {
     public BookingResponse updateBooking(
         Long bookingId,
         UpdateBookingRequest request
-) {
+    ) {
 
     Booking booking =
             bookingRepository
@@ -414,8 +433,7 @@ public BookingResponse bookRoom(BookRoomRequest request) {
             request.checkOutDate()
     );
 
-    Room room =
-            roomRepository
+    Room room = roomRepository
                     .findById(request.roomId())
                     .orElseThrow(() ->
                             new ResourceNotFoundException(
@@ -424,8 +442,7 @@ public BookingResponse bookRoom(BookRoomRequest request) {
                             )
                     );
 
-    if (booking.getStatus()
-            == BookingStatus.CONFIRMED) {
+    if (booking.getStatus() == BookingStatus.CONFIRMED) {
 
         long overlap =
                 bookingRepository
@@ -442,6 +459,13 @@ public BookingResponse bookRoom(BookRoomRequest request) {
                     "Room is already booked for the selected dates"
             );
         }
+    }
+
+    if (booking.getStatus() == BookingStatus.CANCELLED) {
+
+        throw new BadRequestException(
+                "Cancelled booking cannot be updated"
+        );
     }
 
     long numberOfNights =

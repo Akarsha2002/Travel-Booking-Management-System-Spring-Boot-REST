@@ -12,6 +12,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -21,8 +22,7 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse>
-    handleNotFound(
+    public ResponseEntity<ErrorResponse> handleNotFound(
             ResourceNotFoundException exception,
             HttpServletRequest request
     ) {
@@ -136,5 +136,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(status)
                 .body(error);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
+        DataIntegrityViolationException ex,
+        HttpServletRequest request
+    ) {
+        ErrorResponse body = new ErrorResponse(
+            LocalDateTime.now(),
+            HttpStatus.CONFLICT.value(),
+            HttpStatus.CONFLICT.getReasonPhrase(),
+            "Data integrity violation: " + ex.getMostSpecificCause().getMessage(),
+            request.getRequestURI(),
+            null
+        );
+    return ResponseEntity
+            .status(HttpStatus.CONFLICT)
+            .body(body);
     }
 }

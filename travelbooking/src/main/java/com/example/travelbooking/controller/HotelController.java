@@ -148,7 +148,7 @@ public class HotelController {
 
     // Fetch available rooms for a hotel within a specified date range
     @GetMapping("/{hotelId}/rooms/available")
-    public List<RoomResponse> availableRooms(
+    public List<RoomResponse> getAvailableRooms(
 
             @PathVariable Long hotelId,
 
