@@ -53,24 +53,14 @@ public class BookingController {
 
     // Cancel a booking
     @PatchMapping("/{bookingId}/cancel")
-    public BookingResponse cancelBooking(
+    public BookingResponse cancelBooking(@PathVariable Long bookingId) {
 
-            @PathVariable
-            Long bookingId
-    ) {
-
-        return service.cancelBooking(
-                bookingId
-        );
+        return service.cancelBooking(bookingId);
     }
 
     // Delete a booking
     @DeleteMapping("/{bookingId}")
-    public ResponseEntity<Void> deleteBooking(
-
-            @PathVariable
-            Long bookingId
-    ) {
+    public ResponseEntity<Void> deleteBooking(@PathVariable Long bookingId) {
 
         service.deleteBooking(bookingId);
 
@@ -82,6 +72,13 @@ public class BookingController {
     public List<BookingResponse> getAllBookings() {
 
         return service.getAllBookings();
+    }
+
+    // Fetch a booking by ID
+    @GetMapping("/{bookingId}")
+    public BookingResponse getBookingById(@PathVariable Long bookingId) {
+    
+        return service.getBookingById(bookingId);
     }
     
 }

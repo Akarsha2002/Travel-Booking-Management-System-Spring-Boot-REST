@@ -6,6 +6,7 @@ import com.example.travelbooking.exception.*;
 import com.example.travelbooking.repository.*;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -13,6 +14,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
+@Transactional
 public class TravelBookingService {
 
     private final HotelRepository hotelRepository;
@@ -44,12 +46,14 @@ public class TravelBookingService {
         );
     }
 
+    @Transactional(readOnly = true)
     public List<HotelResponse> getAllHotels() {
         return hotelRepository.findAll().stream()
                 .map(this::toHotelResponse)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public HotelResponse getHotelById(Long hotelId) {
         Hotel hotel = hotelRepository
                 .findById(hotelId)
@@ -76,13 +80,8 @@ public class TravelBookingService {
                     )
             );
 
-    hotel.setName(
-            request.name().trim()
-    );
-
-    hotel.setCity(
-            request.city().trim()
-    );
+    hotel.setName(request.name().trim());
+    hotel.setCity(request.city().trim());
 
     hotel = hotelRepository.save(hotel);
 
@@ -104,10 +103,7 @@ public void deleteHotel(Long hotelId) {
                     )
             );
 
-    boolean hasRooms =
-            roomRepository.existsByHotel_Id(
-                    hotelId
-            );
+    boolean hasRooms = roomRepository.existsByHotel_Id(hotelId);
 
     if (hasRooms) {
         throw new BadRequestException(
@@ -119,8 +115,7 @@ public void deleteHotel(Long hotelId) {
     hotelRepository.delete(hotel);
 }
 
-    public RoomResponse addRoom(Long hotelId, AddRoomRequest request
-) {
+    public RoomResponse addRoom(Long hotelId, AddRoomRequest request) {
 
         Hotel hotel = hotelRepository
                 .findById(hotelId)
@@ -142,11 +137,68 @@ public void deleteHotel(Long hotelId) {
         return toRoomResponse(room);
     }
 
+    @Transactional(readOnly = true)
+    public List<RoomResponse> getAllRooms() {
+        return roomRepository.findAll().stream()
+                .map(this::toRoomResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<RoomResponse> getRoomsByHotelId(Long hotelId) {
+
+        Hotel hotel = hotelRepository
+                .findById(hotelId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Hotel not found with ID: "     
+                                        + hotelId
+                        )
+                );
+
+        return roomRepository.findByHotel_Id(hotelId).stream()
+                .map(this::toRoomResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public RoomResponse getRoomById(Long hotelId, Long roomId) {
+
+        Hotel hotel = hotelRepository
+                .findById(hotelId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Hotel not found with ID: "
+                                        + hotelId
+                        )
+                );
+
+        Room room = roomRepository
+                .findById(roomId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Room not found with ID: "
+                                        + roomId
+                        )
+                );
+
+        if (!room.getHotel()
+                 .getId()
+                 .equals(hotel.getId())) {
+
+            throw new BadRequestException(
+                    "Room does not belong to this hotel"
+            );
+        }
+
+        return toRoomResponse(room);
+        }
+
     public RoomResponse updateRoom(
         Long hotelId,
         Long roomId,
         UpdateRoomRequest request
-) {
+    ) {
 
     Hotel hotel = hotelRepository
             .findById(hotelId)
@@ -189,17 +241,9 @@ public void deleteHotel(Long hotelId) {
         );
     }
 
-    room.setRoomNumber(
-            request.roomNumber().trim()
-    );
-
-    room.setRoomType(
-            request.roomType()
-    );
-
-    room.setPricePerNight(
-            request.pricePerNight()
-    );
+    room.setRoomNumber( request.roomNumber().trim());
+    room.setRoomType(request.roomType());
+    room.setPricePerNight(request.pricePerNight());
 
     room.setHotel(hotel);
 
@@ -242,7 +286,8 @@ public void deleteRoom(Long hotelId, Long roomId) {
     roomRepository.delete(room);
 }
 
-    public List<RoomResponse> getAvailableRooms(Long hotelId, LocalDate checkIn, LocalDate checkOut) {
+@Transactional(readOnly = true)
+public List<RoomResponse> getAvailableRooms(Long hotelId, LocalDate checkIn, LocalDate checkOut) {
 
         validateDates(checkIn, checkOut);
 
@@ -262,7 +307,7 @@ public void deleteRoom(Long hotelId, Long roomId) {
                 .toList();
     }
 
-    public BookingResponse bookRoom(BookRoomRequest request) {
+public BookingResponse bookRoom(BookRoomRequest request) {
 
         validateDates(
                 request.checkInDate(),
@@ -414,21 +459,11 @@ public void deleteRoom(Long hotelId, Long roomId) {
                     );
 
     booking.setRoom(room);
+    booking.setCheckInDate(request.checkInDate());
+    booking.setCheckOutDate(request.checkOutDate());
+    booking.setTotalAmount(totalAmount);
 
-    booking.setCheckInDate(
-            request.checkInDate()
-    );
-
-    booking.setCheckOutDate(
-            request.checkOutDate()
-    );
-
-    booking.setTotalAmount(
-            totalAmount
-    );
-
-    booking =
-            bookingRepository.save(booking);
+    booking = bookingRepository.save(booking);
 
     return toBookingResponse(booking);
 }
@@ -448,13 +483,30 @@ public void deleteBooking(Long bookingId) {
     bookingRepository.delete(booking);
 }
 
-    public List<BookingResponse> getAllBookings() {
+@Transactional(readOnly = true)
+public List<BookingResponse> getAllBookings() {
 
         return bookingRepository
                 .findAll()
                 .stream()
                 .map(this::toBookingResponse)
                 .toList();
+    }
+
+@Transactional(readOnly = true)
+public BookingResponse getBookingById(Long bookingId) {
+
+        Booking booking =
+                bookingRepository
+                        .findById(bookingId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Booking not found with ID: "
+                                                + bookingId
+                                )
+                        );
+
+        return toBookingResponse(booking);
     }
 
     private void validateDates(LocalDate checkIn, LocalDate checkOut) {
