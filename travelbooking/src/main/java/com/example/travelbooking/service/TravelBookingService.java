@@ -125,7 +125,7 @@ public void deleteHotel(Long hotelId) {
                         )
                 );
 
-        String roomNumber = request.getRoomNumber().trim();
+        String roomNumber = request.roomNumber().trim();
 
         if (roomRepository.existsByHotel_IdAndRoomNumberIgnoreCase(
             hotelId,
@@ -204,7 +204,7 @@ public void deleteHotel(Long hotelId) {
         }
 
         return toRoomResponse(room);
-        }
+    }
 
     public RoomResponse updateRoom(
         Long hotelId,
@@ -249,11 +249,11 @@ public void deleteHotel(Long hotelId) {
 
     if (duplicate) {
         throw new BadRequestException(
-                "Room number already exists in this hotel"
+                "Room number already exists in this hotel: " + roomNumber
         );
     }
 
-    room.setRoomNumber( roomNumber );
+    room.setRoomNumber(roomNumber);
     room.setRoomType(request.roomType());
     room.setPricePerNight(request.pricePerNight());
 
@@ -275,9 +275,7 @@ public void deleteRoom(Long hotelId, Long roomId) {
                     )
             );
 
-    if (!room.getHotel()
-            .getId()
-            .equals(hotelId)) {
+    if (!room.getHotel().getId().equals(hotelId)) {
 
         throw new BadRequestException(
                 "Room does not belong to this hotel"

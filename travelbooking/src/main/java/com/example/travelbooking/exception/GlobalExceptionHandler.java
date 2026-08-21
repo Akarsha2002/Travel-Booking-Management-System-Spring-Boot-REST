@@ -12,7 +12,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.transaction.TransactionSystemException;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -51,8 +53,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<ErrorResponse>
-    handleBadRequest(
+    public ResponseEntity<ErrorResponse> handleBadRequest(
             BadRequestException exception,
             HttpServletRequest request
     ) {
@@ -95,7 +96,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({
             HttpMessageNotReadableException.class,
-            MethodArgumentTypeMismatchException.class
+            MethodArgumentTypeMismatchException.class,
+            MissingServletRequestParameterException.class
     })
     public ResponseEntity<ErrorResponse>
     handleInvalidInput(
@@ -106,9 +108,8 @@ public class GlobalExceptionHandler {
 
         return buildResponse(
                 HttpStatus.BAD_REQUEST,
-                "Invalid request. Use dates in "
-                        + "dd-MM-yyyy format and "
-                        + "valid enum values.",
+                "Invalid request. Check the request body, path parameters, "
+                        + "query parameters, dates, and enum values.",
                 request.getRequestURI(),
                 null
         );
@@ -140,14 +141,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
-        DataIntegrityViolationException ex,
+        DataIntegrityViolationException exception,
         HttpServletRequest request
     ) {
         ErrorResponse body = new ErrorResponse(
             LocalDateTime.now(),
             HttpStatus.CONFLICT.value(),
             HttpStatus.CONFLICT.getReasonPhrase(),
-            "Data integrity violation: " + ex.getMostSpecificCause().getMessage(),
+            "The request conflicts with existing data.",
             request.getRequestURI(),
             null
         );
@@ -155,4 +156,25 @@ public class GlobalExceptionHandler {
             .status(HttpStatus.CONFLICT)
             .body(body);
     }
+
+    @ExceptionHandler(TransactionSystemException.class)
+    public ResponseEntity<ErrorResponse> handleTransactionSystemException(
+        TransactionSystemException exception,
+        HttpServletRequest request
+    ) {
+
+    ErrorResponse body = new ErrorResponse(
+            LocalDateTime.now(),
+            HttpStatus.BAD_REQUEST.value(),
+            HttpStatus.BAD_REQUEST.getReasonPhrase(),
+            "The request could not be processed because of invalid data.",
+            request.getRequestURI(),
+            null
+    );
+
+    return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(body);
+    }
+
 }
