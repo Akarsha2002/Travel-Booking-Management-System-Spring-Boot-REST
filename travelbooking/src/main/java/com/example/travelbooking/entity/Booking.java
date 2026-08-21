@@ -43,8 +43,7 @@ public class Booking {
             LocalDate checkInDate,
             LocalDate checkOutDate,
             BigDecimal totalAmount,
-            BookingStatus status
-    ) {
+            BookingStatus status) {
         this.customer = customer;
         this.room = room;
         this.checkInDate = checkInDate;

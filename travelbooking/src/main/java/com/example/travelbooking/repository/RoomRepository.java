@@ -7,19 +7,17 @@ import java.util.List;
 
 public interface RoomRepository extends JpaRepository<Room, Long> {
 
-    List<Room> findByHotel_Id(Long hotelId);
+        List<Room> findByHotel_Id(Long hotelId);
 
-    boolean existsByHotel_Id(Long hotelId);
+        boolean existsByHotel_Id(Long hotelId);
 
-    boolean existsByHotel_IdAndRoomNumberIgnoreCaseAndIdNot(
-            Long hotelId,
-            String roomNumber,
-            Long roomId
-    );
+        boolean existsByHotel_IdAndRoomNumberIgnoreCaseAndIdNot(
+                        Long hotelId,
+                        String roomNumber,
+                        Long roomId);
 
-    boolean existsByHotel_IdAndRoomNumberIgnoreCase(
-            Long hotelId,
-            String roomNumber
-    );
-    
+        boolean existsByHotel_IdAndRoomNumberIgnoreCase(
+                        Long hotelId,
+                        String roomNumber);
+
 }

@@ -17,566 +17,461 @@ import java.util.List;
 @Transactional
 public class TravelBookingService {
 
-    private final HotelRepository hotelRepository;
-    private final RoomRepository roomRepository;
-    private final CustomerRepository customerRepository;
-    private final BookingRepository bookingRepository;
+        private final HotelRepository hotelRepository;
+        private final RoomRepository roomRepository;
+        private final CustomerRepository customerRepository;
+        private final BookingRepository bookingRepository;
 
-    public TravelBookingService(
-            HotelRepository hotelRepository,
-            RoomRepository roomRepository,
-            CustomerRepository customerRepository,
-            BookingRepository bookingRepository
-    ) {
-        this.hotelRepository = hotelRepository;
-        this.roomRepository = roomRepository;
-        this.customerRepository = customerRepository;
-        this.bookingRepository = bookingRepository;
-    }
-
-    public HotelResponse addHotel(AddHotelRequest request) {
-
-        Hotel hotel = new Hotel(request.name().trim(), request.city().trim());
-        hotel = hotelRepository.save(hotel);
-
-        return new HotelResponse(
-                hotel.getId(),
-                hotel.getName(),
-                hotel.getCity()
-        );
-    }
-
-    @Transactional(readOnly = true)
-    public List<HotelResponse> getAllHotels() {
-        return hotelRepository.findAll().stream()
-                .map(this::toHotelResponse)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public HotelResponse getHotelById(Long hotelId) {
-        Hotel hotel = hotelRepository
-                .findById(hotelId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Hotel not found with ID: " + hotelId
-                        )
-                );
-                
-        return toHotelResponse(hotel);
-    }
-
-    public HotelResponse updateHotel(
-        Long hotelId,
-        UpdateHotelRequest request
-) {
-
-    Hotel hotel = hotelRepository
-            .findById(hotelId)
-            .orElseThrow(() ->
-                    new ResourceNotFoundException(
-                            "Hotel not found with ID: "
-                                    + hotelId
-                    )
-            );
-
-    hotel.setName(request.name().trim());
-    hotel.setCity(request.city().trim());
-
-    hotel = hotelRepository.save(hotel);
-
-    return new HotelResponse(
-            hotel.getId(),
-            hotel.getName(),
-            hotel.getCity()
-    );
-}
-
-public void deleteHotel(Long hotelId) {
-
-    Hotel hotel = hotelRepository
-            .findById(hotelId)
-            .orElseThrow(() ->
-                    new ResourceNotFoundException(
-                            "Hotel not found with ID: "
-                                    + hotelId
-                    )
-            );
-
-    boolean hasRooms = roomRepository.existsByHotel_Id(hotelId);
-
-    if (hasRooms) {
-        throw new BadRequestException(
-                "Hotel cannot be deleted because rooms exist. "
-                        + "Delete the rooms first."
-        );
-    }
-
-    hotelRepository.delete(hotel);
-}
-
-    public RoomResponse addRoom(Long hotelId, AddRoomRequest request) {
-
-        Hotel hotel = hotelRepository
-                .findById(hotelId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Hotel not found with ID "+ hotelId
-                        )
-                );
-
-        String roomNumber = request.roomNumber().trim();
-
-        if (roomRepository.existsByHotel_IdAndRoomNumberIgnoreCase(
-            hotelId,
-            roomNumber
-        )) {
-        throw new BookingConflictException(
-                "Room number " + roomNumber +
-                " already exists in hotel ID: " + hotelId
-        );
-    }
-
-        Room room = new Room(
-                roomNumber,
-                request.roomType(),
-                request.pricePerNight(),
-                hotel
-        );
-
-        room = roomRepository.save(room);
-
-        return toRoomResponse(room);
-    }
-
-    @Transactional(readOnly = true)
-    public List<RoomResponse> getAllRooms() {
-        return roomRepository.findAll().stream()
-                .map(this::toRoomResponse)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public List<RoomResponse> getRoomsByHotelId(Long hotelId) {
-
-        Hotel hotel = hotelRepository
-                .findById(hotelId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Hotel not found with ID: "     
-                                        + hotelId
-                        )
-                );
-
-        return roomRepository.findByHotel_Id(hotelId).stream()
-                .map(this::toRoomResponse)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public RoomResponse getRoomById(Long hotelId, Long roomId) {
-
-        Hotel hotel = hotelRepository
-                .findById(hotelId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Hotel not found with ID: "
-                                        + hotelId
-                        )
-                );
-
-        Room room = roomRepository
-                .findById(roomId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Room not found with ID: "
-                                        + roomId
-                        )
-                );
-
-        if (!room.getHotel()
-                 .getId()
-                 .equals(hotel.getId())) {
-
-            throw new BadRequestException(
-                    "Room does not belong to this hotel"
-            );
+        public TravelBookingService(
+                        HotelRepository hotelRepository,
+                        RoomRepository roomRepository,
+                        CustomerRepository customerRepository,
+                        BookingRepository bookingRepository) {
+                this.hotelRepository = hotelRepository;
+                this.roomRepository = roomRepository;
+                this.customerRepository = customerRepository;
+                this.bookingRepository = bookingRepository;
         }
 
-        return toRoomResponse(room);
-    }
+        public HotelResponse addHotel(AddHotelRequest request) {
 
-    public RoomResponse updateRoom(
-        Long hotelId,
-        Long roomId,
-        UpdateRoomRequest request
-    ) {
+                Hotel hotel = new Hotel(request.name().trim(), request.city().trim());
+                hotel = hotelRepository.save(hotel);
 
-    Hotel hotel = hotelRepository
-            .findById(hotelId)
-            .orElseThrow(() ->
-                    new ResourceNotFoundException(
-                            "Hotel not found with ID: "
-                                    + hotelId
-                    )
-            );
+                return new HotelResponse(
+                                hotel.getId(),
+                                hotel.getName(),
+                                hotel.getCity());
+        }
 
-    String roomNumber = request.roomNumber().trim();
+        @Transactional(readOnly = true)
+        public List<HotelResponse> getAllHotels() {
+                return hotelRepository.findAll().stream()
+                                .map(this::toHotelResponse)
+                                .toList();
+        }
 
-    Room room = roomRepository
-            .findById(roomId)
-            .orElseThrow(() ->
-                    new ResourceNotFoundException(
-                            "Room not found with ID: "
-                                    + roomId
-                    )
-            );
+        @Transactional(readOnly = true)
+        public HotelResponse getHotelById(Long hotelId) {
+                Hotel hotel = hotelRepository
+                                .findById(hotelId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Hotel not found with ID: " + hotelId));
 
-    if (!room.getHotel().getId().equals(hotelId)) {
+                return toHotelResponse(hotel);
+        }
 
-        throw new BadRequestException(
-                "Room does not belong to this hotel"
-        );
-    }
+        public HotelResponse updateHotel(
+                        Long hotelId,
+                        UpdateHotelRequest request) {
 
-    boolean duplicate =
-            roomRepository
-                    .existsByHotel_IdAndRoomNumberIgnoreCaseAndIdNot(
-                            hotelId,
-                            roomNumber,
-                            roomId
-                    );
+                Hotel hotel = hotelRepository
+                                .findById(hotelId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Hotel not found with ID: "
+                                                                + hotelId));
 
-    if (duplicate) {
-        throw new BadRequestException(
-                "Room number already exists in this hotel: " + roomNumber
-        );
-    }
+                hotel.setName(request.name().trim());
+                hotel.setCity(request.city().trim());
 
-    room.setRoomNumber(roomNumber);
-    room.setRoomType(request.roomType());
-    room.setPricePerNight(request.pricePerNight());
+                hotel = hotelRepository.save(hotel);
 
-    room.setHotel(hotel);
+                return new HotelResponse(
+                                hotel.getId(),
+                                hotel.getName(),
+                                hotel.getCity());
+        }
 
-    room = roomRepository.save(room);
+        public void deleteHotel(Long hotelId) {
 
-    return toRoomResponse(room);
-}
+                Hotel hotel = hotelRepository
+                                .findById(hotelId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Hotel not found with ID: "
+                                                                + hotelId));
 
-public void deleteRoom(Long hotelId, Long roomId) {
+                boolean hasRooms = roomRepository.existsByHotel_Id(hotelId);
 
-    Room room = roomRepository
-            .findById(roomId)
-            .orElseThrow(() ->
-                    new ResourceNotFoundException(
-                            "Room not found with ID: "
-                                    + roomId
-                    )
-            );
+                if (hasRooms) {
+                        throw new BadRequestException(
+                                        "Hotel cannot be deleted because rooms exist. "
+                                                        + "Delete the rooms first.");
+                }
 
-    if (!room.getHotel().getId().equals(hotelId)) {
+                hotelRepository.delete(hotel);
+        }
 
-        throw new BadRequestException(
-                "Room does not belong to this hotel"
-        );
-    }
+        public RoomResponse addRoom(Long hotelId, AddRoomRequest request) {
 
-    boolean hasBookings =
-            bookingRepository.existsByRoom_Id(
-                    roomId
-            );
+                Hotel hotel = hotelRepository
+                                .findById(hotelId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Hotel not found with ID " + hotelId));
 
-    if (hasBookings) {
-        throw new BadRequestException(
-                "Room cannot be deleted because bookings exist"
-        );
-    }
+                String roomNumber = request.roomNumber().trim();
 
-    roomRepository.delete(room);
-}
+                if (roomRepository.existsByHotel_IdAndRoomNumberIgnoreCase(
+                                hotelId,
+                                roomNumber)) {
+                        throw new BookingConflictException(
+                                        "Room number " + roomNumber +
+                                                        " already exists in hotel ID: " + hotelId);
+                }
 
-@Transactional(readOnly = true)
-public List<RoomResponse> getAvailableRooms(Long hotelId, LocalDate checkIn, LocalDate checkOut) {
+                Room room = new Room(
+                                roomNumber,
+                                request.roomType(),
+                                request.pricePerNight(),
+                                hotel);
 
-        hotelRepository.findById(hotelId)
-            .orElseThrow(() ->
-                    new ResourceNotFoundException(
-                            "Hotel not found with ID: " + hotelId
-                    )
-            );
+                room = roomRepository.save(room);
 
-        validateDates(checkIn, checkOut);
+                return toRoomResponse(room);
+        }
 
-        return roomRepository
-                .findByHotel_Id(hotelId)
-                .stream()
-                .filter(room ->
-                        bookingRepository
+        @Transactional(readOnly = true)
+        public List<RoomResponse> getAllRooms() {
+                return roomRepository.findAll().stream()
+                                .map(this::toRoomResponse)
+                                .toList();
+        }
+
+        @Transactional(readOnly = true)
+        public List<RoomResponse> getRoomsByHotelId(Long hotelId) {
+
+                Hotel hotel = hotelRepository
+                                .findById(hotelId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Hotel not found with ID: "
+                                                                + hotelId));
+
+                return roomRepository.findByHotel_Id(hotelId).stream()
+                                .map(this::toRoomResponse)
+                                .toList();
+        }
+
+        @Transactional(readOnly = true)
+        public RoomResponse getRoomById(Long hotelId, Long roomId) {
+
+                Hotel hotel = hotelRepository
+                                .findById(hotelId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Hotel not found with ID: "
+                                                                + hotelId));
+
+                Room room = roomRepository
+                                .findById(roomId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Room not found with ID: "
+                                                                + roomId));
+
+                if (!room.getHotel()
+                                .getId()
+                                .equals(hotel.getId())) {
+
+                        throw new BadRequestException(
+                                        "Room does not belong to this hotel");
+                }
+
+                return toRoomResponse(room);
+        }
+
+        public RoomResponse updateRoom(
+                        Long hotelId,
+                        Long roomId,
+                        UpdateRoomRequest request) {
+
+                Hotel hotel = hotelRepository
+                                .findById(hotelId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Hotel not found with ID: "
+                                                                + hotelId));
+
+                String roomNumber = request.roomNumber().trim();
+
+                Room room = roomRepository
+                                .findById(roomId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Room not found with ID: "
+                                                                + roomId));
+
+                if (!room.getHotel().getId().equals(hotelId)) {
+
+                        throw new BadRequestException(
+                                        "Room does not belong to this hotel");
+                }
+
+                boolean duplicate = roomRepository
+                                .existsByHotel_IdAndRoomNumberIgnoreCaseAndIdNot(
+                                                hotelId,
+                                                roomNumber,
+                                                roomId);
+
+                if (duplicate) {
+                        throw new BadRequestException(
+                                        "Room number already exists in this hotel: " + roomNumber);
+                }
+
+                room.setRoomNumber(roomNumber);
+                room.setRoomType(request.roomType());
+                room.setPricePerNight(request.pricePerNight());
+
+                room.setHotel(hotel);
+
+                room = roomRepository.save(room);
+
+                return toRoomResponse(room);
+        }
+
+        public void deleteRoom(Long hotelId, Long roomId) {
+
+                Room room = roomRepository
+                                .findById(roomId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Room not found with ID: "
+                                                                + roomId));
+
+                if (!room.getHotel().getId().equals(hotelId)) {
+
+                        throw new BadRequestException(
+                                        "Room does not belong to this hotel");
+                }
+
+                boolean hasBookings = bookingRepository.existsByRoom_Id(
+                                roomId);
+
+                if (hasBookings) {
+                        throw new BadRequestException(
+                                        "Room cannot be deleted because bookings exist");
+                }
+
+                roomRepository.delete(room);
+        }
+
+        @Transactional(readOnly = true)
+        public List<RoomResponse> getAvailableRooms(Long hotelId, LocalDate checkIn, LocalDate checkOut) {
+
+                hotelRepository.findById(hotelId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Hotel not found with ID: " + hotelId));
+
+                validateDates(checkIn, checkOut);
+
+                return roomRepository
+                                .findByHotel_Id(hotelId)
+                                .stream()
+                                .filter(room -> bookingRepository
+                                                .countOverlappingBookings(
+                                                                room.getId(),
+                                                                BookingStatus.CONFIRMED,
+                                                                checkIn,
+                                                                checkOut) == 0)
+                                .map(this::toRoomResponse)
+                                .toList();
+        }
+
+        public BookingResponse bookRoom(BookRoomRequest request) {
+
+                validateDates(
+                                request.checkInDate(),
+                                request.checkOutDate());
+
+                Room room = roomRepository
+                                .findById(request.roomId())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Room not found"));
+
+                long overlap = bookingRepository
                                 .countOverlappingBookings(
-                                        room.getId(),
-                                        BookingStatus.CONFIRMED,
-                                        checkIn,
-                                        checkOut
-                                ) == 0
-                )
-                .map(this::toRoomResponse)
-                .toList();
-    }
+                                                room.getId(),
+                                                BookingStatus.CONFIRMED,
+                                                request.checkInDate(),
+                                                request.checkOutDate());
 
-public BookingResponse bookRoom(BookRoomRequest request) {
+                if (overlap > 0) {
+                        throw new BookingConflictException(
+                                        "Room is already booked");
+                }
 
-        validateDates(
-                request.checkInDate(),
-                request.checkOutDate()
-        );
+                Customer customer = customerRepository
+                                .findByEmailIgnoreCase(
+                                                request.customerEmail())
+                                .orElseGet(() -> new Customer(
+                                                request.customerName(),
+                                                request.customerEmail(),
+                                                request.customerPhone()));
 
-        Room room = roomRepository
-                .findById(request.roomId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Room not found"
-                        )
-                );
+                customer = customerRepository.save(customer);
 
-        long overlap =
-                bookingRepository
-                        .countOverlappingBookings(
-                                room.getId(),
-                                BookingStatus.CONFIRMED,
+                long nights = ChronoUnit.DAYS.between(
                                 request.checkInDate(),
-                                request.checkOutDate()
-                        );
+                                request.checkOutDate());
 
-        if (overlap > 0) {
-            throw new BookingConflictException(
-                    "Room is already booked"
-            );
-        }
+                BigDecimal total = room.getPricePerNight()
+                                .multiply(
+                                                BigDecimal.valueOf(nights));
 
-        Customer customer =
-                customerRepository
-                        .findByEmailIgnoreCase(
-                                request.customerEmail()
-                        )
-                        .orElseGet(() ->
-                                new Customer(
-                                        request.customerName(),
-                                        request.customerEmail(),
-                                        request.customerPhone()
-                                )
-                        );
-
-        customer = customerRepository.save(customer);
-
-        long nights =
-                ChronoUnit.DAYS.between(
-                        request.checkInDate(),
-                        request.checkOutDate()
-                );
-
-        BigDecimal total =
-                room.getPricePerNight()
-                        .multiply(
-                                BigDecimal.valueOf(nights)
-                        );
-
-        Booking booking = new Booking(
-                customer,
-                room,
-                request.checkInDate(),
-                request.checkOutDate(),
-                total,
-                BookingStatus.CONFIRMED
-        );
-
-        booking = bookingRepository.save(booking);
-
-        return toBookingResponse(booking);
-    }
-
-    public BookingResponse cancelBooking(Long bookingId) {
-
-        Booking booking =
-                bookingRepository
-                        .findById(bookingId)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Booking not found"
-                                )
-                        );
-
-        booking.setStatus(BookingStatus.CANCELLED);
-
-        return toBookingResponse(bookingRepository.save(booking));
-    }
-
-    public BookingResponse updateBooking(
-        Long bookingId,
-        UpdateBookingRequest request
-    ) {
-
-    Booking booking =
-            bookingRepository
-                    .findById(bookingId)
-                    .orElseThrow(() ->
-                            new ResourceNotFoundException(
-                                    "Booking not found with ID: "
-                                            + bookingId
-                            )
-                    );
-
-    validateDates(
-            request.checkInDate(),
-            request.checkOutDate()
-    );
-
-    Room room = roomRepository
-                    .findById(request.roomId())
-                    .orElseThrow(() ->
-                            new ResourceNotFoundException(
-                                    "Room not found with ID: "
-                                            + request.roomId()
-                            )
-                    );
-
-    if (booking.getStatus() == BookingStatus.CONFIRMED) {
-
-        long overlap =
-                bookingRepository
-                        .countOverlappingBookingsExcludingBooking(
-                                room.getId(),
-                                bookingId,
-                                BookingStatus.CONFIRMED,
+                Booking booking = new Booking(
+                                customer,
+                                room,
                                 request.checkInDate(),
-                                request.checkOutDate()
-                        );
+                                request.checkOutDate(),
+                                total,
+                                BookingStatus.CONFIRMED);
 
-        if (overlap > 0) {
-            throw new BookingConflictException(
-                    "Room is already booked for the selected dates"
-            );
+                booking = bookingRepository.save(booking);
+
+                return toBookingResponse(booking);
         }
-    }
 
-    if (booking.getStatus() == BookingStatus.CANCELLED) {
+        public BookingResponse cancelBooking(Long bookingId) {
 
-        throw new BadRequestException(
-                "Cancelled booking cannot be updated"
-        );
-    }
+                Booking booking = bookingRepository
+                                .findById(bookingId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Booking not found"));
 
-    long numberOfNights =
-            ChronoUnit.DAYS.between(
-                    request.checkInDate(),
-                    request.checkOutDate()
-            );
+                booking.setStatus(BookingStatus.CANCELLED);
 
-    BigDecimal totalAmount =
-            room.getPricePerNight()
-                    .multiply(
-                            BigDecimal.valueOf(
-                                    numberOfNights
-                            )
-                    );
-
-    booking.setRoom(room);
-    booking.setCheckInDate(request.checkInDate());
-    booking.setCheckOutDate(request.checkOutDate());
-    booking.setTotalAmount(totalAmount);
-
-    booking = bookingRepository.save(booking);
-
-    return toBookingResponse(booking);
-}
-
-public void deleteBooking(Long bookingId) {
-
-    Booking booking =
-            bookingRepository
-                    .findById(bookingId)
-                    .orElseThrow(() ->
-                            new ResourceNotFoundException(
-                                    "Booking not found with ID: "
-                                            + bookingId
-                            )
-                    );
-
-    bookingRepository.delete(booking);
-}
-
-@Transactional(readOnly = true)
-public List<BookingResponse> getAllBookings() {
-
-        return bookingRepository
-                .findAll()
-                .stream()
-                .map(this::toBookingResponse)
-                .toList();
-    }
-
-@Transactional(readOnly = true)
-public BookingResponse getBookingById(Long bookingId) {
-
-        Booking booking =
-                bookingRepository
-                        .findById(bookingId)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Booking not found with ID: "
-                                                + bookingId
-                                )
-                        );
-
-        return toBookingResponse(booking);
-    }
-
-    private void validateDates(LocalDate checkIn, LocalDate checkOut) {
-
-        if (!checkOut.isAfter(checkIn)) {
-            throw new BadRequestException(
-                    "Check-out date must be after check-in date"
-            );
+                return toBookingResponse(bookingRepository.save(booking));
         }
-    }
 
-    private HotelResponse toHotelResponse(Hotel hotel) {
+        public BookingResponse updateBooking(
+                        Long bookingId,
+                        UpdateBookingRequest request) {
 
-        return new HotelResponse(
-                hotel.getId(),
-                hotel.getName(),
-                hotel.getCity()
-        );
-    }
+                Booking booking = bookingRepository
+                                .findById(bookingId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Booking not found with ID: "
+                                                                + bookingId));
 
-    private RoomResponse toRoomResponse(Room room) {
+                validateDates(
+                                request.checkInDate(),
+                                request.checkOutDate());
 
-        return new RoomResponse(
-                room.getId(),
-                room.getHotel().getId(),
-                room.getHotel().getName(),
-                room.getRoomNumber(),
-                room.getRoomType(),
-                room.getPricePerNight()
-        );
-    }
+                Room room = roomRepository
+                                .findById(request.roomId())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Room not found with ID: "
+                                                                + request.roomId()));
 
-    private BookingResponse toBookingResponse(Booking booking) {
+                if (booking.getStatus() == BookingStatus.CONFIRMED) {
 
-        return new BookingResponse(
-                booking.getId(),
-                booking.getCustomer().getName(),
-                booking.getCustomer().getEmail(),
-                booking.getCustomer().getPhone(),
-                booking.getRoom().getHotel().getId(),
-                booking.getRoom().getHotel().getName(),
-                booking.getRoom().getId(),
-                booking.getRoom().getRoomNumber(),
-                booking.getRoom().getRoomType(),
-                booking.getCheckInDate(),
-                booking.getCheckOutDate(),
-                booking.getTotalAmount(),
-                booking.getStatus()
-        );
-    }
+                        long overlap = bookingRepository
+                                        .countOverlappingBookingsExcludingBooking(
+                                                        room.getId(),
+                                                        bookingId,
+                                                        BookingStatus.CONFIRMED,
+                                                        request.checkInDate(),
+                                                        request.checkOutDate());
+
+                        if (overlap > 0) {
+                                throw new BookingConflictException(
+                                                "Room is already booked for the selected dates");
+                        }
+                }
+
+                if (booking.getStatus() == BookingStatus.CANCELLED) {
+
+                        throw new BadRequestException(
+                                        "Cancelled booking cannot be updated");
+                }
+
+                long numberOfNights = ChronoUnit.DAYS.between(
+                                request.checkInDate(),
+                                request.checkOutDate());
+
+                BigDecimal totalAmount = room.getPricePerNight()
+                                .multiply(
+                                                BigDecimal.valueOf(
+                                                                numberOfNights));
+
+                booking.setRoom(room);
+                booking.setCheckInDate(request.checkInDate());
+                booking.setCheckOutDate(request.checkOutDate());
+                booking.setTotalAmount(totalAmount);
+
+                booking = bookingRepository.save(booking);
+
+                return toBookingResponse(booking);
+        }
+
+        public void deleteBooking(Long bookingId) {
+
+                Booking booking = bookingRepository
+                                .findById(bookingId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Booking not found with ID: "
+                                                                + bookingId));
+
+                bookingRepository.delete(booking);
+        }
+
+        @Transactional(readOnly = true)
+        public List<BookingResponse> getAllBookings() {
+
+                return bookingRepository
+                                .findAll()
+                                .stream()
+                                .map(this::toBookingResponse)
+                                .toList();
+        }
+
+        @Transactional(readOnly = true)
+        public BookingResponse getBookingById(Long bookingId) {
+
+                Booking booking = bookingRepository
+                                .findById(bookingId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Booking not found with ID: "
+                                                                + bookingId));
+
+                return toBookingResponse(booking);
+        }
+
+        private void validateDates(LocalDate checkIn, LocalDate checkOut) {
+
+                if (!checkOut.isAfter(checkIn)) {
+                        throw new BadRequestException(
+                                        "Check-out date must be after check-in date");
+                }
+        }
+
+        private HotelResponse toHotelResponse(Hotel hotel) {
+
+                return new HotelResponse(
+                                hotel.getId(),
+                                hotel.getName(),
+                                hotel.getCity());
+        }
+
+        private RoomResponse toRoomResponse(Room room) {
+
+                return new RoomResponse(
+                                room.getId(),
+                                room.getHotel().getId(),
+                                room.getHotel().getName(),
+                                room.getRoomNumber(),
+                                room.getRoomType(),
+                                room.getPricePerNight());
+        }
+
+        private BookingResponse toBookingResponse(Booking booking) {
+
+                return new BookingResponse(
+                                booking.getId(),
+                                booking.getCustomer().getName(),
+                                booking.getCustomer().getEmail(),
+                                booking.getCustomer().getPhone(),
+                                booking.getRoom().getHotel().getId(),
+                                booking.getRoom().getHotel().getName(),
+                                booking.getRoom().getId(),
+                                booking.getRoom().getRoomNumber(),
+                                booking.getRoom().getRoomType(),
+                                booking.getCheckInDate(),
+                                booking.getCheckOutDate(),
+                                booking.getTotalAmount(),
+                                booking.getStatus());
+        }
 }

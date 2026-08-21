@@ -17,8 +17,7 @@ public class BookingController {
     private final TravelBookingService service;
 
     public BookingController(
-            TravelBookingService service
-    ) {
+            TravelBookingService service) {
         this.service = service;
     }
 
@@ -26,10 +25,7 @@ public class BookingController {
     @PostMapping
     public ResponseEntity<BookingResponse> bookRoom(
 
-            @Valid
-            @RequestBody
-            BookRoomRequest request
-    ) {
+            @Valid @RequestBody BookRoomRequest request) {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -40,13 +36,9 @@ public class BookingController {
     @PutMapping("/{bookingId}")
     public BookingResponse updateBooking(
 
-            @PathVariable
-            Long bookingId,
+            @PathVariable Long bookingId,
 
-            @Valid
-            @RequestBody
-            UpdateBookingRequest request
-    ) {
+            @Valid @RequestBody UpdateBookingRequest request) {
 
         return service.updateBooking(bookingId, request);
     }
@@ -77,8 +69,8 @@ public class BookingController {
     // Fetch a booking by ID
     @GetMapping("/{bookingId}")
     public BookingResponse getBookingById(@PathVariable Long bookingId) {
-    
+
         return service.getBookingById(bookingId);
     }
-    
+
 }

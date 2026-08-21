@@ -25,9 +25,7 @@ public class HotelController {
     @PostMapping
     // Add a new hotel
     public ResponseEntity<HotelResponse> addHotel(
-            @Valid @RequestBody
-            AddHotelRequest request
-    ) {
+            @Valid @RequestBody AddHotelRequest request) {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -50,13 +48,9 @@ public class HotelController {
     @PutMapping("/{hotelId}")
     public HotelResponse updateHotel(
 
-            @PathVariable
-            Long hotelId,
+            @PathVariable Long hotelId,
 
-            @Valid
-            @RequestBody
-            UpdateHotelRequest request
-    ) {
+            @Valid @RequestBody UpdateHotelRequest request) {
 
         return service.updateHotel(hotelId, request);
     }
@@ -76,10 +70,7 @@ public class HotelController {
 
             @PathVariable Long hotelId,
 
-            @Valid
-            @RequestBody
-            AddRoomRequest request
-    ) {
+            @Valid @RequestBody AddRoomRequest request) {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -102,12 +93,9 @@ public class HotelController {
     @GetMapping("/{hotelId}/rooms/{roomId}")
     public RoomResponse getRoomById(
 
-            @PathVariable
-            Long hotelId,
+            @PathVariable Long hotelId,
 
-            @PathVariable
-            Long roomId
-    ) {
+            @PathVariable Long roomId) {
 
         return service.getRoomById(hotelId, roomId);
     }
@@ -116,16 +104,11 @@ public class HotelController {
     @PutMapping("/{hotelId}/rooms/{roomId}")
     public RoomResponse updateRoom(
 
-            @PathVariable
-            Long hotelId,
+            @PathVariable Long hotelId,
 
-            @PathVariable
-            Long roomId,
+            @PathVariable Long roomId,
 
-            @Valid
-            @RequestBody
-            UpdateRoomRequest request
-    ) {
+            @Valid @RequestBody UpdateRoomRequest request) {
 
         return service.updateRoom(hotelId, roomId, request);
     }
@@ -134,12 +117,9 @@ public class HotelController {
     @DeleteMapping("/{hotelId}/rooms/{roomId}")
     public ResponseEntity<Void> deleteRoom(
 
-            @PathVariable
-            Long hotelId,
+            @PathVariable Long hotelId,
 
-            @PathVariable
-            Long roomId
-    ) {
+            @PathVariable Long roomId) {
 
         service.deleteRoom(hotelId, roomId);
 
@@ -152,14 +132,9 @@ public class HotelController {
 
             @PathVariable Long hotelId,
 
-            @RequestParam
-            @DateTimeFormat(pattern = "dd-MM-yyyy")
-            LocalDate checkIn,
+            @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate checkIn,
 
-            @RequestParam
-            @DateTimeFormat(pattern = "dd-MM-yyyy")
-            LocalDate checkOut
-    ) {
+            @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate checkOut) {
 
         return service.getAvailableRooms(hotelId, checkIn, checkOut);
     }
